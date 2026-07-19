@@ -47,7 +47,9 @@ public:
         MODE_DAEMON,
         MODE_SELF_SELECT,
 #       if defined XMRIG_ALGO_KAWPOW || defined XMRIG_ALGO_GHOSTRIDER
+        // MoneroOcean && C3Pool: auto mode supports pool-directed switches into Eth-style job framing.
         MODE_AUTO_ETH,
+        // End MoneroOcean && C3Pool
 #       endif
 #       ifdef XMRIG_FEATURE_BENCHMARK
         MODE_BENCHMARK,

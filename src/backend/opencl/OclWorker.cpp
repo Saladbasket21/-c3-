@@ -31,7 +31,9 @@
 
 
 #ifdef XMRIG_ALGO_CN_GPU
+// MoneroOcean && C3Pool: CN-GPU uses the Ryo OpenCL runner instead of the standard CN runner.
 #   include "backend/opencl/runners/OclRyoRunner.h"
+// End MoneroOcean && C3Pool
 #endif
 
 #ifdef XMRIG_ALGO_RANDOMX
@@ -98,10 +100,12 @@ xmrig::OclWorker::OclWorker(size_t id, const OclLaunchData &data) :
 
     default:
 #       ifdef XMRIG_ALGO_CN_GPU
+        // MoneroOcean && C3Pool: dispatch CN-GPU jobs to the Ryo runner.
         if (m_algorithm == Algorithm::CN_GPU) {
             m_runner = new OclRyoRunner(id, data);
         }
         else
+        // End MoneroOcean && C3Pool
 #       endif
         m_runner = new OclCnRunner(id, data);
         break;

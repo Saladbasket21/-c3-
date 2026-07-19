@@ -85,6 +85,7 @@ int xmrig::App::exec()
     }
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: run offline algo-perf before connecting to a pool when config needs it.
     const std::vector<Pool>& pools = m_controller->config()->pools().data();
     if (pools.size() != 1 || pools[0].mode() != Pool::MODE_BENCHMARK) {
         m_controller->pre_start();
@@ -102,6 +103,7 @@ int xmrig::App::exec()
             m_controller->start();
         }
     } else
+    // End MoneroOcean && C3Pool
 #   endif
     m_controller->start();
 

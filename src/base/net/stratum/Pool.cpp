@@ -231,9 +231,11 @@ xmrig::IClient *xmrig::Pool::createClient(int id, IClientListener *listener) con
         if ((f == Algorithm::KAWPOW) || (f == Algorithm::GHOSTRIDER) || (m_coin == Coin::RAVEN)) {
             client = new EthStratumClient(id, Platform::userAgent(), listener);
         }
+        // MoneroOcean && C3Pool: AutoClient is needed so MO pools can switch protocols by job.
         else {
             client = new AutoClient(id, Platform::userAgent(), listener);
         }
+        // End MoneroOcean && C3Pool
 #else
         {
             client = new Client(id, Platform::userAgent(), listener);

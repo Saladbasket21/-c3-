@@ -203,9 +203,11 @@ bool xmrig::Config::isShouldSave() const
 #   endif
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: save refreshed algo-perf data after benchmark runs.
     if (m_benchmark.isNewBenchRun()) {
         return true;
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
     return (m_upgrade || cpu().isShouldSave());
@@ -246,7 +248,9 @@ bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
 #   endif
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: load persisted per-algorithm performance hints.
     m_benchmark.read(reader.getValue(kAlgoPerf));
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_FEATURE_DMI
@@ -315,10 +319,12 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember(StringRef(kWatch),                    m_watch, allocator);
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: persist benchmark controls and algo-perf data.
     doc.AddMember(StringRef(kRebenchAlgo),              isRebenchAlgo(), allocator);
     doc.AddMember(StringRef(kBenchAlgoTime),            benchAlgoTime(), allocator);
     doc.AddMember(StringRef(kAlgoMinTime),              algoMinTime(), allocator);
     doc.AddMember(StringRef(kAlgoPerf),                 m_benchmark.toJSON(doc), allocator);
+    // End MoneroOcean && C3Pool
 #   endif
 
     doc.AddMember(StringRef(kPauseOnBattery),           isPauseOnBattery(), allocator);

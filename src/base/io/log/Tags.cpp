@@ -122,12 +122,14 @@ const char *xmrig::Tags::opencl()
 
 
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
+// MoneroOcean && C3Pool: log tag used by algo-perf benchmark reporting.
 const char *xmrig::Tags::benchmark()
 {
     static const char *tag = BRIGHT_BLACK_BG(CYAN_BOLD_S " benchmk ");
 
     return tag;
 }
+// End MoneroOcean && C3Pool
 #endif
 
 #ifdef XMRIG_FEATURE_PROFILING

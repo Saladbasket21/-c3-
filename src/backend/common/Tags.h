@@ -47,7 +47,9 @@ const char *cuda_tag();
 #endif
 
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
+// MoneroOcean && C3Pool: backend log tag for algo-perf benchmark output.
 const char *bm_tag();
+// End MoneroOcean && C3Pool
 #endif
 
 

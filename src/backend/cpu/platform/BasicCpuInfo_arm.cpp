@@ -52,10 +52,12 @@ const char *xmrig::BasicCpuInfo::backend() const
 xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint32_t) const
 {
 #   ifdef XMRIG_ALGO_GHOSTRIDER
+    // MoneroOcean && C3Pool: Flex/KCN shares GhostRider family detection but is single-hash.
     switch (algorithm.id()) {
         case Algorithm::GHOSTRIDER_RTM: return CpuThreads(threads(), 8);
         case Algorithm::FLEX_KCN:       return CpuThreads(threads(), 1);
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
     return CpuThreads(threads());

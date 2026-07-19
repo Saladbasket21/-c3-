@@ -323,6 +323,7 @@ const char *xmrig::BasicCpuInfo::backend() const
 }
 
 
+// MoneroOcean && C3Pool: generated CPU profiles respect max thread limits for fork algo switching.
 xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint32_t limit) const
 {
     const uint32_t count = std::thread::hardware_concurrency();
@@ -361,9 +362,11 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_GPU
+    // MoneroOcean && C3Pool: CN-GPU CPU fallback uses one hash per worker.
     if (algorithm == Algorithm::CN_GPU) {
         return count_limit;
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
@@ -372,6 +375,7 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
             return count_limit;
         }
 
+        // MoneroOcean && C3Pool: Panthera/Scala uses one worker per selected physical-ish CPU slot.
         if (algorithm == Algorithm::RX_XLA) {
             CpuThreads threads;
             for (size_t i = 0; i < count_limit2; ++i) {
@@ -379,6 +383,7 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
             }
             return threads;
         }
+        // End MoneroOcean && C3Pool
 
         return count_limit2;
     }
@@ -391,16 +396,19 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
 #   endif
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
+    // MoneroOcean && C3Pool: Flex/KCN shares GhostRider family profile generation but is single-hash.
     switch (algorithm.id()) {
         case Algorithm::GHOSTRIDER_RTM: return CpuThreads(std::max<size_t>(count_limit2, 1), 8);
         case Algorithm::FLEX_KCN:       return CpuThreads(std::max<size_t>(count_limit2, 1), 1);
         default:
             break;
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
     return CpuThreads(count_limit2, 1);
 }
+// End MoneroOcean && C3Pool
 
 
 rapidjson::Value xmrig::BasicCpuInfo::toJSON(rapidjson::Document &doc) const

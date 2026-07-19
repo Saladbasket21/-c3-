@@ -35,14 +35,14 @@ public:
         MONERO,
         SUMO,
         ARQ,
-        XEQ,
         GRAFT,
-        KEVA,
         RAVEN,
         WOWNERO,
+        // MoneroOcean && C3Pool: extra pool coin ids that reuse existing RandomX variants.
         ZEPHYR,
         TOWNFORGE,
         YADA,
+        // End MoneroOcean && C3Pool
         MAX
     };
 

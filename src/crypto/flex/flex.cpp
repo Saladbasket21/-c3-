@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <vector>
 
 #include "crypto/cn/CnHash.h"
 #include "backend/cpu/Cpu.h"
@@ -58,31 +59,28 @@ enum CNAlgo {
 };
 
 
-static void selectAlgo(unsigned char nibble, bool* selectedAlgos, uint8_t* selectedIndex, int algoCount, int* currentCount) {
+static void selectAlgo(unsigned char nibble, std::vector<bool>& selectedAlgos, uint8_t* selectedIndex, int algoCount, int& currentCount) {
 	uint8_t algoDigit = (nibble & 0x0F) % algoCount;
 	if(!selectedAlgos[algoDigit]) {
 		selectedAlgos[algoDigit] = true;
-		selectedIndex[currentCount[0]] = algoDigit;
-		currentCount[0] = currentCount[0] + 1;
+		selectedIndex[currentCount] = algoDigit;
+		currentCount = currentCount + 1;
 	}
 	algoDigit = (nibble >> 4) % algoCount;
 	if(!selectedAlgos[algoDigit]) {
 		selectedAlgos[algoDigit] = true;
-		selectedIndex[currentCount[0]] = algoDigit;
-		currentCount[0] = currentCount[0] + 1;
+		selectedIndex[currentCount] = algoDigit;
+		currentCount = currentCount + 1;
 	}
 }
 
 static void getAlgoString(void *mem, unsigned int size, uint8_t* selectedAlgoOutput, int algoCount) {
   unsigned char *p = (unsigned char *)mem;
   unsigned int len = size/2;
-  bool* selectedAlgo = new bool[algoCount];
-  for(int z=0; z < algoCount; z++) {
-	  selectedAlgo[z] = false;
-  }
+  std::vector<bool> selectedAlgo(algoCount, false);
   int selectedCount = 0;
   for (unsigned int i=0;i<len; i++) {
-	  selectAlgo(p[i], selectedAlgo, selectedAlgoOutput, algoCount, &selectedCount);
+	  selectAlgo(p[i], selectedAlgo, selectedAlgoOutput, algoCount, selectedCount);
 	  if(selectedCount == algoCount) {
 		  break;
 	  }
@@ -95,7 +93,6 @@ static void getAlgoString(void *mem, unsigned int size, uint8_t* selectedAlgoOut
 		}
 	}
   }
-  delete [] selectedAlgo;
 }
 
 void print_hex_memory(void *mem, unsigned int size) {
@@ -188,33 +185,33 @@ void flex_hash(const char* input, char* output, cryptonight_ctx** ctx) {
 		switch(cnAlgo)
 		{
 		 case CNDark:
-                        //cryptonightdark_hash((const char*)in, (char*)hash, size, 1); 
-                        f = CnHash::fn(Algorithm::CN_GR_0, av, Assembly::AUTO); 
+                        //cryptonightdark_hash((const char*)in, (char*)hash, size, 1);
+                        f = CnHash::fn(Algorithm::CN_GR_0, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
 		 case CNDarklite:
                         //cryptonightdarklite_hash((const char*)in, (char*)hash, size, 1);
-                        f = CnHash::fn(Algorithm::CN_GR_1, av, Assembly::AUTO);
+                        f = CnHash::fn(Algorithm::CN_GR_1, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
 		 case CNFast:
                         //cryptonightfast_hash((const char*)in, (char*)hash, size, 1);
-                        f = CnHash::fn(Algorithm::CN_GR_2, av, Assembly::AUTO);
+                        f = CnHash::fn(Algorithm::CN_GR_2, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
 		 case CNLite:
                         //cryptonightlite_hash((const char*)in, (char*)hash, size, 1);
-                        f = CnHash::fn(Algorithm::CN_GR_3, av, Assembly::AUTO);
+                        f = CnHash::fn(Algorithm::CN_GR_3, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
 		 case CNTurtle:
-                        //cryptonightturtle_hash((const char*)in, (char*)hash, size, 1); 
-                        f = CnHash::fn(Algorithm::CN_GR_4, av, Assembly::AUTO);
+                        //cryptonightturtle_hash((const char*)in, (char*)hash, size, 1);
+                        f = CnHash::fn(Algorithm::CN_GR_4, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
 		 case CNTurtlelite:
                         //cryptonightturtlelite_hash((const char*)in, (char*)hash, size, 1);
-                        f = CnHash::fn(Algorithm::CN_GR_5, av, Assembly::AUTO);
+                        f = CnHash::fn(Algorithm::CN_GR_5, av, Assembly::AUTO, CnHash::Finalizer::Flex);
 			break;
                  default:
                         f = nullptr;
 		}
-                if (f) f((const uint8_t*)in, size, (uint8_t*)hash, ctx, 101);
+                if (f) f((const uint8_t*)in, size, (uint8_t*)hash, ctx, 0);
 
 		//selection core algo
 		switch (algo) {

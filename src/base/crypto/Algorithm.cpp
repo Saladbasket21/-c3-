@@ -75,7 +75,9 @@ const char *Algorithm::kCN_UPX2         = "cn/upx2";
 #endif
 
 #ifdef XMRIG_ALGO_CN_GPU
+// MoneroOcean && C3Pool: fork-only CryptoNight-GPU name negotiated by MoneroOcean && C3Pool pools.
 const char *Algorithm::kCN_GPU          = "cn/gpu";
+// End MoneroOcean && C3Pool
 #endif
 
 #ifdef XMRIG_ALGO_RANDOMX
@@ -84,10 +86,8 @@ const char *Algorithm::kRX_0            = "rx/0";
 const char *Algorithm::kRX_V2           = "rx/2";
 const char *Algorithm::kRX_WOW          = "rx/wow";
 const char *Algorithm::kRX_ARQ          = "rx/arq";
-const char *Algorithm::kRX_XEQ          = "rx/xeq";
 const char *Algorithm::kRX_GRAFT        = "rx/graft";
 const char *Algorithm::kRX_SFX          = "rx/sfx";
-const char *Algorithm::kRX_KEVA         = "rx/keva";
 const char *Algorithm::kRX_YADA         = "rx/yada";
 #endif
 
@@ -106,12 +106,16 @@ const char *Algorithm::kKAWPOW_RVN      = "kawpow";
 #ifdef XMRIG_ALGO_GHOSTRIDER
 const char* Algorithm::kGHOSTRIDER      = "ghostrider";
 const char* Algorithm::kGHOSTRIDER_RTM  = "ghostrider";
+// MoneroOcean && C3Pool: Flex/KCN is dispatched through the GhostRider family plumbing.
 const char* Algorithm::kFLEX            = "flex";
 const char* Algorithm::kFLEX_KCN        = "flex";
+// End MoneroOcean && C3Pool
 #endif
 
 #ifdef XMRIG_ALGO_RANDOMX
+// MoneroOcean && C3Pool: Panthera/Scala uses RandomX registration with a separate name.
 const char *Algorithm::kRX_XLA          = "panthera";
+// End MoneroOcean && C3Pool
 #endif
 
 
@@ -155,7 +159,9 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_GPU
+    // MoneroOcean && C3Pool: register fork-only CN-GPU algorithm id.
     ALGO_NAME(CN_GPU),
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
@@ -163,10 +169,8 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
     ALGO_NAME(RX_V2),
     ALGO_NAME(RX_WOW),
     ALGO_NAME(RX_ARQ),
-    ALGO_NAME(RX_XEQ),
     ALGO_NAME(RX_GRAFT),
     ALGO_NAME(RX_SFX),
-    ALGO_NAME(RX_KEVA),
     ALGO_NAME(RX_YADA),
 #   endif
 
@@ -181,12 +185,16 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
+    // MoneroOcean && C3Pool: register Panthera/Scala id.
     ALGO_NAME(RX_XLA),
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     ALGO_NAME(GHOSTRIDER_RTM),
+    // MoneroOcean && C3Pool: register Flex/KCN as a GhostRider-family runtime variant.
     ALGO_NAME(FLEX_KCN),
+    // End MoneroOcean && C3Pool
 #   endif
 };
 
@@ -273,8 +281,10 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_GPU
+    // MoneroOcean && C3Pool: accept pool and legacy names for CN-GPU.
     ALGO_ALIAS_AUTO(CN_GPU),        ALGO_ALIAS(CN_GPU,          "cryptonight/gpu"),
                                     ALGO_ALIAS(CN_GPU,          "cryptonight_gpu"),
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
@@ -289,21 +299,18 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
                                     ALGO_ALIAS(RX_WOW,          "randomwow"),
     ALGO_ALIAS_AUTO(RX_ARQ),        ALGO_ALIAS(RX_ARQ,          "randomx/arq"),
                                     ALGO_ALIAS(RX_ARQ,          "randomarq"),
-    ALGO_ALIAS_AUTO(RX_XEQ),        ALGO_ALIAS(RX_XEQ,          "randomx/xeq"),
-                                    ALGO_ALIAS(RX_XEQ,          "randomxeq"),
     ALGO_ALIAS_AUTO(RX_GRAFT),      ALGO_ALIAS(RX_GRAFT,        "randomx/graft"),
                                     ALGO_ALIAS(RX_GRAFT,        "randomgraft"),
     ALGO_ALIAS_AUTO(RX_SFX),        ALGO_ALIAS(RX_SFX,          "randomx/sfx"),
                                     ALGO_ALIAS(RX_SFX,          "randomsfx"),
-    ALGO_ALIAS_AUTO(RX_KEVA),       ALGO_ALIAS(RX_KEVA,         "randomx/keva"),
-                                    ALGO_ALIAS(RX_KEVA,         "randomkeva"),
     ALGO_ALIAS_AUTO(RX_YADA),       ALGO_ALIAS(RX_YADA,         "randomx/yada"),
                                     ALGO_ALIAS(RX_YADA,         "randomyada"),
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_ARGON2
     ALGO_ALIAS_AUTO(AR2_CHUKWA),    ALGO_ALIAS(AR2_CHUKWA,      "chukwa"),
-    ALGO_ALIAS_AUTO(AR2_CHUKWA_V2), ALGO_ALIAS(AR2_CHUKWA,      "chukwav2"),
+    ALGO_ALIAS_AUTO(AR2_CHUKWA_V2), ALGO_ALIAS(AR2_CHUKWA_V2,   "chukwav2"),
     ALGO_ALIAS_AUTO(AR2_WRKZ),      ALGO_ALIAS(AR2_WRKZ,        "argon2/wrkz"),
 #   endif
 
@@ -312,14 +319,18 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
+    // MoneroOcean && C3Pool: accept Panthera pool alias.
     ALGO_ALIAS_AUTO(RX_XLA),        ALGO_ALIAS(RX_XLA,          "Panthera"),
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     ALGO_ALIAS_AUTO(GHOSTRIDER_RTM), ALGO_ALIAS(GHOSTRIDER_RTM, "ghostrider/rtm"),
                                      ALGO_ALIAS(GHOSTRIDER_RTM, "gr"),
+    // MoneroOcean && C3Pool: Flex/KCN is announced by pools as flex or flex/kcn.
     ALGO_ALIAS_AUTO(FLEX_KCN), ALGO_ALIAS(FLEX_KCN, "flex/kcn"),
                                ALGO_ALIAS(FLEX_KCN, "flex"),
+    // End MoneroOcean && C3Pool
 #   endif
 };
 
@@ -392,12 +403,16 @@ std::vector<xmrig::Algorithm> xmrig::Algorithm::all(const std::function<bool(con
         CN_HEAVY_0, CN_HEAVY_TUBE, CN_HEAVY_XHV,
         CN_PICO_0, CN_PICO_TLO,
         CN_UPX2,
-        CN_GPU, RX_XLA, RX_XEQ, RX_KEVA,
+        // MoneroOcean && C3Pool: expose fork algorithms in API/config ordering.
+        CN_GPU, RX_XLA,
+        // End MoneroOcean && C3Pool
         RX_0, RX_V2, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_YADA,
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,
         KAWPOW_RVN,
         GHOSTRIDER_RTM,
+        // MoneroOcean && C3Pool: expose Flex/KCN in API/config ordering.
         FLEX_KCN
+        // End MoneroOcean && C3Pool
     };
 
     Algorithms out;

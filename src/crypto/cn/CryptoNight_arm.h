@@ -66,6 +66,7 @@ static inline void do_skein_hash(const uint8_t *input, size_t len, uint8_t *outp
     xmr_skein(input, output);
 }
 
+// MoneroOcean && C3Pool: Flex/KCN replaces the fourth standard CN final hash with Flex Skein.
 static inline void do_flex_skein_hash(const uint8_t* input, size_t len, uint8_t* output) {
     int r = skein_hash(512, input, 8 * len, (uint8_t*)output);
     assert(SKEIN_SUCCESS == r);
@@ -73,6 +74,7 @@ static inline void do_flex_skein_hash(const uint8_t* input, size_t len, uint8_t*
 
 void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 void (* const extra_hashes_flex[3])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_flex_skein_hash};
+// End MoneroOcean && C3Pool
 
 
 // This will shift and xor tmp1 into itself as 4 32-bit vals such as
@@ -171,6 +173,26 @@ inline void mix_and_propagate(__m128i& x0, __m128i& x1, __m128i& x2, __m128i& x3
 
 
 namespace xmrig {
+
+
+// MoneroOcean && C3Pool: finalizer selection is explicit so Flex/KCN does not depend on block height.
+template<CnHash::Finalizer FINALIZER>
+static inline void cryptonight_final_hash(uint8_t *state, uint8_t *output);
+
+
+template<>
+inline void cryptonight_final_hash<CnHash::Finalizer::Standard>(uint8_t *state, uint8_t *output)
+{
+    extra_hashes[state[0] & 3](state, 200, output);
+}
+
+
+template<>
+inline void cryptonight_final_hash<CnHash::Finalizer::Flex>(uint8_t *state, uint8_t *output)
+{
+    extra_hashes_flex[state[0] % 3](state, 200, output);
+}
+// End MoneroOcean && C3Pool
 
 
 template<Algorithm::Id ALGO, bool SOFT_AES>
@@ -406,7 +428,7 @@ static inline void cryptonight_conceal_tweak(__m128i& cx, __m128& conc_var)
 }
 
 
-template<Algorithm::Id ALGO, bool SOFT_AES, int interleave>
+template<Algorithm::Id ALGO, bool SOFT_AES, int interleave, CnHash::Finalizer FINALIZER = CnHash::Finalizer::Standard>
 inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t size, uint8_t *__restrict__ output, cryptonight_ctx **__restrict__ ctx, uint64_t height)
 {
     constexpr CnAlgo<ALGO> props;
@@ -551,10 +573,7 @@ inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t si
 
     cn_implode_scratchpad<ALGO, SOFT_AES>(reinterpret_cast<const __m128i *>(ctx[0]->memory), reinterpret_cast<__m128i *>(ctx[0]->state));
     keccakf(h0, 24);
-    if (height == 101) // Flex algo ugly hack
-      extra_hashes_flex[ctx[0]->state[0] & 2](ctx[0]->state, 200, output);
-    else
-      extra_hashes[ctx[0]->state[0] & 3](ctx[0]->state, 200, output);
+    cryptonight_final_hash<FINALIZER>(ctx[0]->state, output);
 }
 
 
@@ -562,6 +581,7 @@ inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t si
 
 
 #ifdef XMRIG_ALGO_CN_GPU
+// MoneroOcean && C3Pool: CN-GPU CPU fallback path used by hash tests and CPU self-test.
 template<size_t ITER, uint32_t MASK>
 void cn_gpu_inner_arm(const uint8_t *spad, uint8_t *lpad);
 
@@ -612,6 +632,7 @@ inline void cryptonight_single_hash_gpu(const uint8_t *__restrict__ input, size_
 }
 
 } /* namespace xmrig */
+// End MoneroOcean && C3Pool
 #endif
 
 

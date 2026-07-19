@@ -62,10 +62,12 @@ int xmrig::Controller::init()
 }
 
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
+// MoneroOcean && C3Pool: benchmark mode needs the miner object before the normal network start path.
 void xmrig::Controller::pre_start()
 {
     m_miner = std::make_shared<Miner>(this);
 }
+// End MoneroOcean && C3Pool
 #endif
 
 
@@ -73,7 +75,9 @@ void xmrig::Controller::start()
 {
     Base::start();
 
+    // MoneroOcean && C3Pool: pre_start can already allocate the miner for benchmark runs.
     if (m_miner == nullptr) m_miner = std::make_shared<Miner>(this);
+    // End MoneroOcean && C3Pool
 
     network()->connect();
 }

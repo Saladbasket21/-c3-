@@ -45,7 +45,9 @@ public:
 
     int init() override;
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: benchmark mode initializes the miner before connecting pools.
     void pre_start();
+    // End MoneroOcean && C3Pool
 #   endif
     void start() override;
     void stop() override;

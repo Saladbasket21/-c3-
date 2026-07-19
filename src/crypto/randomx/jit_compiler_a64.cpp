@@ -90,6 +90,7 @@ static size_t CalcDatasetItemSize()
 	// Prologue
 	((uint8_t*)randomx_calc_dataset_item_aarch64_prefetch - (uint8_t*)randomx_calc_dataset_item_aarch64) +
 	// Main loop
+	// MoneroOcean && C3Pool: fork RandomX variants can change cache access count.
 	RandomX_CurrentConfig.CacheAccesses * (
 		// Main loop prologue
 		((uint8_t*)randomx_calc_dataset_item_aarch64_mix - ((uint8_t*)randomx_calc_dataset_item_aarch64_prefetch)) + 4 +
@@ -98,6 +99,7 @@ static size_t CalcDatasetItemSize()
 		// Main loop epilogue
 		((uint8_t*)randomx_calc_dataset_item_aarch64_store_result - (uint8_t*)randomx_calc_dataset_item_aarch64_mix) + 4
 	) +
+	// End MoneroOcean && C3Pool
 	// Epilogue
 	((uint8_t*)randomx_calc_dataset_item_aarch64_end - (uint8_t*)randomx_calc_dataset_item_aarch64_store_result);
 }
@@ -337,7 +339,9 @@ void JitCompilerA64::generateSuperscalarHash(SuperscalarProgram(&programs)[N])
 	num32bitLiterals = 64;
 	constexpr uint32_t tmp_reg = 12;
 
+	// MoneroOcean && C3Pool: fork RandomX variants can change cache access count.
 	for (size_t i = 0; i < RandomX_CurrentConfig.CacheAccesses; ++i)
+	// End MoneroOcean && C3Pool
 	{
 		// and x11, x10, CacheSize / CacheLineSize - 1
 		emit32(0x92400000 | 11 | (10 << 5) | ((RandomX_CurrentConfig.Log2_CacheSize - 1) << 10), code, codePos);

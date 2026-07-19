@@ -200,10 +200,12 @@ static inline const std::string &usage()
 #   endif
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
-    u += "\nMoneroOcean Benchmark (algo-perf):\n";
+    // MoneroOcean && C3Pool: expose fork algo-perf benchmark controls in --help output.
+    u += "\nMoneroOcean && C3Pool Benchmark (algo-perf):\n";
     u += "      --rebench-algo            run algo-perf benchmark (default if config contains no algo-perf)\n";
     u += "      --bench-algo-time=N       run algo-perf benchmark this many seconds per algo (default: 10)\n";
     u += "      --algo-min-time=N         when mining, avoid switching more often than every N seconds (default: 0/disabled)\n";
+    // End MoneroOcean && C3Pool
 #   endif
 
     return u;

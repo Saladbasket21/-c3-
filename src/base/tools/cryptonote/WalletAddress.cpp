@@ -228,6 +228,7 @@ const xmrig::WalletAddress::TagInfo &xmrig::WalletAddress::tagInfo(uint64_t tag)
         { 0x34f51a, { Coin::SUMO,       TESTNET,    INTEGRATED,     29734,  29735 } },
         { 0x1d351a, { Coin::SUMO,       TESTNET,    SUBADDRESS,     29734,  29735 } },
 
+        // MoneroOcean && C3Pool: keep ArQmA tags mapped to the renamed ARQ coin id.
         { 0x2cca,   { Coin::ARQ,        MAINNET,    PUBLIC,         19994,  19995 } },
         { 0x116bc7, { Coin::ARQ,        MAINNET,    INTEGRATED,     19994,  19995 } },
         { 0x6847,   { Coin::ARQ,        MAINNET,    SUBADDRESS,     19994,  19995 } },
@@ -239,10 +240,7 @@ const xmrig::WalletAddress::TagInfo &xmrig::WalletAddress::tagInfo(uint64_t tag)
         { 0x39ca,   { Coin::ARQ,        STAGENET,   PUBLIC,         39994,  39995 } },
         { 0x1742ca, { Coin::ARQ,        STAGENET,   INTEGRATED,     39994,  39995 } },
         { 0x1d84ca, { Coin::ARQ,        STAGENET,   SUBADDRESS,     39994,  39995 } },
-
-        { 0x121,    { Coin::XEQ,        MAINNET,    PUBLIC,          9231,   9232 } },
-        { 0x629f,   { Coin::XEQ,        MAINNET,    INTEGRATED,      9231,   9232 } },
-        { 0x59a0,   { Coin::XEQ,        MAINNET,    SUBADDRESS,      9231,   9232 } },
+        // End MoneroOcean && C3Pool
 
         { 0x1032,   { Coin::WOWNERO,    MAINNET,    PUBLIC,         34568,  34569 } },
         { 0x1a9a,   { Coin::WOWNERO,    MAINNET,    INTEGRATED,     34568,  34569 } },

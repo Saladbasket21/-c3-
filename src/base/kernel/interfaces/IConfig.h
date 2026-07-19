@@ -95,9 +95,11 @@ public:
         PrintTimeKey         = 1007,
 
 #       ifdef XMRIG_FEATURE_MO_BENCHMARK
+        // MoneroOcean && C3Pool: CLI keys for algo-perf benchmark and switch throttling.
         RebenchAlgoKey       = 10001,
         BenchAlgoTimeKey     = 10002,
         AlgoMinTimeKey       = 10003,
+        // End MoneroOcean && C3Pool
 #       endif
 
         // xmrig cpu

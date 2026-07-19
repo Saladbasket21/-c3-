@@ -49,13 +49,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cassert>
 
+// MoneroOcean && C3Pool: Panthera/Scala pre-hash uses yespower plus KangarooTwelve.
 extern "C" {
 #include "crypto/randomx/panthera/yespower.h"
 #include "crypto/randomx/panthera/KangarooTwelve.h"
 }
+// End MoneroOcean && C3Pool
 
 #include "crypto/rx/Profiler.h"
 #include "base/net/stratum/Job.h"
+
+// MoneroOcean && C3Pool: patch copied x86 dataset-read JIT snippets by opcode.
+#if defined(XMRIG_FEATURE_ASM) && (defined(_M_X64) || defined(__x86_64__))
+static void patchCodeReadDatasetMask(uint8_t *code, const uint32_t size, const uint32_t mask)
+{
+	uint32_t patched = 0;
+
+	for (uint32_t i = 0; i + 6 <= size; ++i) {
+		if (code[i] == 0x81 && (code[i + 1] == 0xe1 || code[i + 1] == 0xe2)) {
+			memcpy(code + i + 2, &mask, sizeof(mask));
+			++patched;
+		}
+	}
+
+	assert(patched == 2);
+}
+#endif
+// End MoneroOcean && C3Pool
 
 RandomX_ConfigurationMoneroV2::RandomX_ConfigurationMoneroV2()
 {
@@ -104,16 +124,6 @@ RandomX_ConfigurationArqma::RandomX_ConfigurationArqma()
 	ScratchpadL3_Size = 262144;
 }
 
-RandomX_ConfigurationEquilibria::RandomX_ConfigurationEquilibria()
-{
-  ArgonIterations = 1;
-  ArgonSalt = "RandomXEQ\x01";
-  ProgramIterations = 1024;
-  ProgramCount = 4;
-  ScratchpadL2_Size = 131072;
-  ScratchpadL3_Size = 262144;
-}
-
 RandomX_ConfigurationGraft::RandomX_ConfigurationGraft()
 {
 	ArgonLanes = 2;
@@ -128,13 +138,6 @@ RandomX_ConfigurationSafex::RandomX_ConfigurationSafex()
 	ArgonSalt = "RandomSFX\x01";
 }
 
-RandomX_ConfigurationKeva::RandomX_ConfigurationKeva()
-{
-	ArgonSalt = "RandomKV\x01";
-	ScratchpadL2_Size = 131072;
-	ScratchpadL3_Size = 1048576;
-}
-
 RandomX_ConfigurationYada::RandomX_ConfigurationYada()
 {
 	ArgonSalt = "RandomXYadaCoin\x03";
@@ -142,6 +145,7 @@ RandomX_ConfigurationYada::RandomX_ConfigurationYada()
 	ArgonIterations = 4;
 }
 
+// MoneroOcean && C3Pool: Panthera/Scala consensus parameters for panthera.
 RandomX_ConfigurationScala::RandomX_ConfigurationScala()
 {
 	ArgonMemory       = 131072;
@@ -159,11 +163,14 @@ RandomX_ConfigurationScala::RandomX_ConfigurationScala()
 	RANDOMX_FREQ_IADD_RS = 25;
 	RANDOMX_FREQ_CBRANCH = 16;
 }
+// End MoneroOcean && C3Pool
 
 RandomX_ConfigurationBase::RandomX_ConfigurationBase()
+	// MoneroOcean && C3Pool: make memory, cache accesses, and dataset size runtime-configurable.
 	: ArgonMemory(262144)
 	, CacheAccesses(8)
 	, DatasetBaseSize(2147483648)
+	// End MoneroOcean && C3Pool
 	, ArgonIterations(3)
 	, ArgonLanes(1)
 	, ArgonSalt("RandomX\x03")
@@ -235,18 +242,24 @@ RandomX_ConfigurationBase::RandomX_ConfigurationBase()
 		const uint8_t* b = addr(randomx_sshash_end);
 		memcpy(codeSshPrefetchTweaked, a, b - a);
 	}
+	// MoneroOcean && C3Pool: copy dataset-read code so Apply() can patch fork dataset masks.
 	{
 		const uint8_t* a = addr(randomx_program_read_dataset);
 		const uint8_t* b = addr(randomx_program_read_dataset_v2);
-		memcpy(codeReadDatasetTweaked, a, b - a);
-		codeReadDatasetTweakedSize = b - a;
+		const auto size = static_cast<size_t>(b - a);
+		assert(size <= sizeof(codeReadDatasetTweaked));
+		memcpy(codeReadDatasetTweaked, a, size);
+		codeReadDatasetTweakedSize = static_cast<uint32_t>(size);
 	}
 	{
 		const uint8_t* a = addr(randomx_program_read_dataset_v2);
 		const uint8_t* b = addr(randomx_program_read_dataset_sshash_init);
-		memcpy(codeReadDatasetV2Tweaked, a, b - a);
-		codeReadDatasetV2TweakedSize = b - a;
+		const auto size = static_cast<size_t>(b - a);
+		assert(size <= sizeof(codeReadDatasetV2Tweaked));
+		memcpy(codeReadDatasetV2Tweaked, a, size);
+		codeReadDatasetV2TweakedSize = static_cast<uint32_t>(size);
 	}
+	// End MoneroOcean && C3Pool
 	if (xmrig::Cpu::info()->hasBMI2()) {
 		const uint8_t* a = addr(randomx_prefetch_scratchpad_bmi2);
 		const uint8_t* b = addr(randomx_prefetch_scratchpad_end);
@@ -285,17 +298,18 @@ void RandomX_ConfigurationBase::Apply()
 
 	ScratchpadL3Mask_Calculated = (((ScratchpadL3_Size / sizeof(uint64_t)) - 1) * 8);
 	ScratchpadL3Mask64_Calculated = ((ScratchpadL3_Size / sizeof(uint64_t)) / 8 - 1) * 64;
+	// MoneroOcean && C3Pool: fork variants can change dataset size at runtime.
         CacheLineAlignMask_Calculated = (DatasetBaseSize - 1) & ~(RANDOMX_DATASET_ITEM_SIZE - 1);
+	// End MoneroOcean && C3Pool
 
 #if defined(XMRIG_FEATURE_ASM) && (defined(_M_X64) || defined(__x86_64__))
-	*(uint32_t*)(codeSshPrefetchTweaked + 3) = ArgonMemory * 16 - 1;
+	// MoneroOcean && C3Pool: patch generated x86 code for fork memory and dataset parameters.
 	*(uint32_t*)(codeSshPrefetchTweaked + 3) = ArgonMemory * 16 - 1;
 	const uint32_t DatasetBaseMask = DatasetBaseSize - RANDOMX_DATASET_ITEM_SIZE;
-	*(uint32_t*)(codeReadDatasetV2Tweaked + 9) = DatasetBaseMask;
-	*(uint32_t*)(codeReadDatasetV2Tweaked + 24) = DatasetBaseMask;
-	*(uint32_t*)(codeReadDatasetTweaked + 7) = DatasetBaseMask;
-	*(uint32_t*)(codeReadDatasetTweaked + 23) = DatasetBaseMask;
+	patchCodeReadDatasetMask(codeReadDatasetV2Tweaked, codeReadDatasetV2TweakedSize, DatasetBaseMask);
+	patchCodeReadDatasetMask(codeReadDatasetTweaked, codeReadDatasetTweakedSize, DatasetBaseMask);
 //	*(uint32_t*)(codeReadDatasetLightSshInitTweaked + 59) = DatasetBaseMask;
+	// End MoneroOcean && C3Pool
 
 	const bool hasBMI2 = xmrig::Cpu::info()->hasBMI2();
 
@@ -443,17 +457,18 @@ RandomX_ConfigurationMonero RandomX_MoneroConfig;
 RandomX_ConfigurationMoneroV2 RandomX_MoneroConfigV2;
 RandomX_ConfigurationWownero RandomX_WowneroConfig;
 RandomX_ConfigurationArqma RandomX_ArqmaConfig;
-RandomX_ConfigurationEquilibria RandomX_EquilibriaConfig;
+// MoneroOcean && C3Pool: global configurations for fork RandomX-family variants.
 RandomX_ConfigurationGraft RandomX_GraftConfig;
 RandomX_ConfigurationSafex RandomX_SafexConfig;
-RandomX_ConfigurationKeva RandomX_KevaConfig;
 RandomX_ConfigurationScala RandomX_ScalaConfig;
+// End MoneroOcean && C3Pool
 RandomX_ConfigurationYada RandomX_YadaConfig;
 
 alignas(64) RandomX_ConfigurationBase RandomX_CurrentConfig;
 
 static std::mutex vm_pool_mutex;
 
+// MoneroOcean && C3Pool: Panthera/Scala replaces the normal Blake2b pre-hash.
 int rx_yespower_k12(void *out, size_t outlen, const void *in, size_t inlen)
 {
 	rx_blake2b_wrapper::run(out, outlen, in, inlen);
@@ -461,6 +476,7 @@ int rx_yespower_k12(void *out, size_t outlen, const void *in, size_t inlen)
 	if (yespower_tls((const uint8_t *)out, outlen, &params, (yespower_binary_t *)out)) return -1;
 	return KangarooTwelve((const unsigned char *)out, outlen, (unsigned char *)out, 32, 0, 0);
 }
+// End MoneroOcean && C3Pool
 
 extern "C" {
 
@@ -663,6 +679,7 @@ extern "C" {
 		vm->~randomx_vm();
 	}
 
+	// MoneroOcean && C3Pool: callers pass the active algorithm so panthera can select its pre-hash.
 	void randomx_calculate_hash(randomx_vm *machine, const void *input, size_t inputSize, void *output, const xmrig::Algorithm algo) {
 		assert(machine != nullptr);
 		assert(inputSize == 0 || input != nullptr);
@@ -681,7 +698,9 @@ extern "C" {
 		machine->run(&tempHash);
 		machine->getFinalResult(output);
 	}
+	// End MoneroOcean && C3Pool
 
+	// MoneroOcean && C3Pool: first/next hashing also receives the active algorithm for switch-sensitive variants.
 	void randomx_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize, const xmrig::Algorithm algo) {
                 switch (algo) {
                     case xmrig::Algorithm::RX_XLA:   rx_yespower_k12(tempHash, sizeof(tempHash), input, inputSize); break;
@@ -707,6 +726,7 @@ extern "C" {
 		}
 		machine->hashAndFill(output, tempHash);
 	}
+	// End MoneroOcean && C3Pool
 
 	void randomx_calculate_commitment(const void* input, size_t inputSize, const void* hash_in, void* com_out) {
 		uint8_t buf[xmrig::Job::kMaxBlobSize + RANDOMX_HASH_SIZE];

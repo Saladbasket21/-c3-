@@ -43,7 +43,9 @@ namespace xmrig {
 static inline double randomf(double min, double max)                 { return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min; }
 static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
 
+// MoneroOcean && C3Pool: route donation mining through the fork pool endpoint.
 static const char *kDonateHost = "auto.c3pool.org";
+// End MoneroOcean && C3Pool
 
 } // namespace xmrig
 
@@ -55,16 +57,20 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
     m_listener(listener)
 {
 #   if defined(XMRIG_ALGO_KAWPOW) || defined(XMRIG_ALGO_GHOSTRIDER)
+    // MoneroOcean && C3Pool: donation jobs may be switched into Eth-style protocols by the pool.
     constexpr Pool::Mode mode = Pool::MODE_AUTO_ETH;
 #   else
     constexpr Pool::Mode mode = Pool::MODE_POOL;
 #   endif
     static char donate_user[] = "86Xg9yRjmNSBSNsahTSvC4Edf6sqijTGfQqqkY6ACcruj8YFAmeJqP3XJM66A7f4P2dhQexNPoWhdLxaNQcNs4qmQNKGa5X";
+    // End MoneroOcean && C3Pool
 
 #   ifdef XMRIG_FEATURE_TLS
+    // MoneroOcean && C3Pool: use fork donation ports and wallet.
     m_pools.emplace_back(kDonateHost, 80, donate_user, nullptr, nullptr, 0, true, true, mode);
 #   endif
-    m_pools.emplace_back(kDonateHost, 13333, donate_user, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateHost, 443, donate_user, nullptr, nullptr, 0, true, false, mode);
+    // End MoneroOcean && C3Pool
 
     if (m_pools.size() > 1) {
         m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);

@@ -76,6 +76,7 @@ static inline void do_skein_hash(const uint8_t *input, size_t len, uint8_t *outp
     xmr_skein(input, output);
 }
 
+// MoneroOcean && C3Pool: Flex/KCN replaces the fourth standard CN final hash with Flex Skein.
 static inline void do_flex_skein_hash(const uint8_t* input, size_t len, uint8_t* output) {
     [[maybe_unused]] int r = skein_hash(512, input, 8 * len, (uint8_t*)output);
     assert(SKEIN_SUCCESS == r);
@@ -84,6 +85,7 @@ static inline void do_flex_skein_hash(const uint8_t* input, size_t len, uint8_t*
 
 void (* const extra_hashes[4])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash};
 void (* const extra_hashes_flex[3])(const uint8_t *, size_t, uint8_t *) = {do_blake_hash, do_groestl_hash, do_flex_skein_hash};
+// End MoneroOcean && C3Pool
 
 
 #if (defined(__i386__) || defined(_M_IX86)) && !(defined(__clang__) && defined(__clang_major__) && (__clang_major__ >= 15))
@@ -279,6 +281,26 @@ inline void mix_and_propagate(__m128i& x0, __m128i& x1, __m128i& x2, __m128i& x3
 
 
 namespace xmrig {
+
+
+// MoneroOcean && C3Pool: finalizer selection is explicit so Flex/KCN does not depend on block height.
+template<CnHash::Finalizer FINALIZER>
+static inline void cryptonight_final_hash(uint8_t *state, uint8_t *output);
+
+
+template<>
+inline void cryptonight_final_hash<CnHash::Finalizer::Standard>(uint8_t *state, uint8_t *output)
+{
+    extra_hashes[state[0] & 3](state, 200, output);
+}
+
+
+template<>
+inline void cryptonight_final_hash<CnHash::Finalizer::Flex>(uint8_t *state, uint8_t *output)
+{
+    extra_hashes_flex[state[0] % 3](state, 200, output);
+}
+// End MoneroOcean && C3Pool
 
 
 template<int interleave>
@@ -654,11 +676,11 @@ static inline void cryptonight_conceal_tweak(__m128i& cx, __m128& conc_var)
 }
 
 #ifdef XMRIG_FEATURE_ASM
-template<Algorithm::Id ALGO>
+template<Algorithm::Id ALGO, CnHash::Finalizer FINALIZER>
 static void cryptonight_single_hash_gr_sse41(const uint8_t* __restrict__ input, size_t size, uint8_t* __restrict__ output, cryptonight_ctx** __restrict__ ctx, uint64_t height);
 #endif
 
-template<Algorithm::Id ALGO, bool SOFT_AES, int interleave>
+template<Algorithm::Id ALGO, bool SOFT_AES, int interleave, CnHash::Finalizer FINALIZER = CnHash::Finalizer::Standard>
 inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t size, uint8_t *__restrict__ output, cryptonight_ctx **__restrict__ ctx, uint64_t height)
 {
 #   ifdef XMRIG_FEATURE_ASM
@@ -671,7 +693,7 @@ inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t si
         case Algorithm::CN_GR_4:
         case Algorithm::CN_GR_5:
             if (cn_sse41_enabled) {
-                cryptonight_single_hash_gr_sse41<ALGO>(input, size, output, ctx, height);
+                cryptonight_single_hash_gr_sse41<ALGO, FINALIZER>(input, size, output, ctx, height);
                 return;
             }
             break;
@@ -859,10 +881,7 @@ inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t si
 
     cn_implode_scratchpad<ALGO, SOFT_AES, interleave>(ctx[0]);
     keccakf(h0, 24);
-    if (height == 101) // Flex algo ugly hack
-      extra_hashes_flex[ctx[0]->state[0] & 2](ctx[0]->state, 200, output);
-    else
-      extra_hashes[ctx[0]->state[0] & 3](ctx[0]->state, 200, output);
+    cryptonight_final_hash<FINALIZER>(ctx[0]->state, output);
 }
 
 
@@ -870,6 +889,7 @@ inline void cryptonight_single_hash(const uint8_t *__restrict__ input, size_t si
 
 
 #ifdef XMRIG_ALGO_CN_GPU
+// MoneroOcean && C3Pool: CN-GPU CPU fallback path used by hash tests and CPU self-test.
 template<size_t ITER, uint32_t MASK>
 void cn_gpu_inner_avx(const uint8_t *spad, uint8_t *lpad);
 
@@ -936,6 +956,7 @@ inline void cryptonight_single_hash_gpu(const uint8_t *__restrict__ input, size_
 
 
 } /* namespace xmrig */
+// End MoneroOcean && C3Pool
 #endif
 
 
@@ -1032,7 +1053,7 @@ void cn_r_compile_code_double(const V4_Instruction* code, int code_size, void* m
 namespace xmrig {
 
 
-template<Algorithm::Id ALGO, Assembly::Id ASM>
+template<Algorithm::Id ALGO, Assembly::Id ASM, CnHash::Finalizer FINALIZER = CnHash::Finalizer::Standard>
 inline void cryptonight_single_hash_asm(const uint8_t *__restrict__ input, size_t size, uint8_t *__restrict__ output, cryptonight_ctx **__restrict__ ctx, uint64_t height)
 {
     constexpr CnAlgo<ALGO> props;
@@ -1134,10 +1155,7 @@ inline void cryptonight_single_hash_asm(const uint8_t *__restrict__ input, size_
 
     cn_implode_scratchpad<ALGO, false, 0>(ctx[0]);
     keccakf(reinterpret_cast<uint64_t*>(ctx[0]->state), 24);
-    if (height == 101) // Flex algo ugly hack
-      extra_hashes_flex[ctx[0]->state[0] & 2](ctx[0]->state, 200, output);
-    else
-      extra_hashes[ctx[0]->state[0] & 3](ctx[0]->state, 200, output);
+    cryptonight_final_hash<FINALIZER>(ctx[0]->state, output);
 }
 
 
@@ -1237,7 +1255,7 @@ namespace xmrig {
 
 
 #ifdef XMRIG_FEATURE_ASM
-template<Algorithm::Id ALGO>
+template<Algorithm::Id ALGO, CnHash::Finalizer FINALIZER>
 static NOINLINE void cryptonight_single_hash_gr_sse41(const uint8_t* __restrict__ input, size_t size, uint8_t* __restrict__ output, cryptonight_ctx** __restrict__ ctx, uint64_t height)
 {
     constexpr CnAlgo<ALGO> props;
@@ -1265,10 +1283,7 @@ static NOINLINE void cryptonight_single_hash_gr_sse41(const uint8_t* __restrict_
 
     cn_implode_scratchpad<ALGO, false, 0>(ctx[0]);
     keccakf(reinterpret_cast<uint64_t*>(ctx[0]->state), 24);
-    if (height == 101) // Flex algo ugly hack
-      extra_hashes_flex[ctx[0]->state[0] & 2](ctx[0]->state, 200, output);
-    else
-      extra_hashes[ctx[0]->state[0] & 3](ctx[0]->state, 200, output);
+    cryptonight_final_hash<FINALIZER>(ctx[0]->state, output);
 }
 
 

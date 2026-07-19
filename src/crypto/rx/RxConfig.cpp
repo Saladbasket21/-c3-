@@ -187,8 +187,10 @@ std::vector<uint32_t> xmrig::RxConfig::nodeset() const
 {
     auto info = Cpu::info();
 
+    // MoneroOcean && C3Pool: fork RandomX variants can change dataset and cache memory requirements.
     const uint64_t dataset_mem = RandomX_CurrentConfig.DatasetBaseSize + RandomX_ConfigurationBase::DatasetExtraSize;
     const uint64_t cache_mem = RandomX_CurrentConfig.ArgonMemory * 1024;
+    // End MoneroOcean && C3Pool
     const uint64_t threads_mem = info->threads() << 21;
 
     const uint64_t freem_mem = uv_get_free_memory();

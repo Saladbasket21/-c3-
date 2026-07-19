@@ -41,6 +41,7 @@ class BaseConfig : public IConfig
 {
 public:
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: persisted controls for algo-perf benchmarking and switch throttling.
     static const char *kAlgoMinTime;
     static const char *kAlgoPerf;
 #   endif
@@ -59,6 +60,7 @@ public:
     static const char *kPrintTime;
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
     static const char *kRebenchAlgo;
+    // End MoneroOcean && C3Pool
 #   endif
     static const char *kSyslog;
     static const char *kTitle;
@@ -86,9 +88,11 @@ public:
     inline uint32_t printTime() const                       { return m_printTime; }
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: expose algo-perf controls to mining and network runtime.
     inline bool isRebenchAlgo() const                       { return m_rebenchAlgo; }
     inline int  benchAlgoTime() const                       { return m_benchAlgoTime; }
     inline int  algoMinTime() const                         { return m_algoMinTime; }
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_FEATURE_TLS
@@ -122,9 +126,11 @@ protected:
     uint32_t m_printTime    = 60;
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: defaults for offline benchmark timing and pool switch throttle.
     bool m_rebenchAlgo   = false;
     int  m_benchAlgoTime = 10;
     int  m_algoMinTime   = 0;
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_FEATURE_TLS

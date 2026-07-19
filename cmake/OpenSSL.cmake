@@ -1,6 +1,7 @@
 if (WITH_TLS)
     set(OPENSSL_ROOT_DIR ${XMRIG_DEPS})
 
+    # MoneroOcean && C3Pool: MSYS builds use the same static OpenSSL path as Windows.
     if (WIN32 OR CMAKE_SYSTEM_NAME MATCHES "MSYS")
         set(OPENSSL_USE_STATIC_LIBS TRUE)
         set(OPENSSL_MSVC_STATIC_RT TRUE)
@@ -9,6 +10,7 @@ if (WITH_TLS)
     elseif (APPLE)
         set(OPENSSL_USE_STATIC_LIBS TRUE)
     endif()
+    # End MoneroOcean && C3Pool
 
     if (BUILD_STATIC)
         set(OPENSSL_USE_STATIC_LIBS TRUE)

@@ -145,6 +145,7 @@ set(SOURCES_BASE
    )
 
 
+# MoneroOcean && C3Pool: MSYS builds use Windows platform source files.
 if (WIN32 OR CMAKE_SYSTEM_NAME MATCHES "MSYS")
     set(SOURCES_OS
         src/base/io/json/Json_win.cpp
@@ -164,6 +165,7 @@ else()
         src/base/kernel/Process_unix.cpp
         )
 endif()
+# End MoneroOcean && C3Pool
 
 
 if (WITH_HWLOC)
@@ -173,6 +175,7 @@ if (WITH_HWLOC)
 endif()
 
 
+# MoneroOcean && C3Pool: MSYS should not enable POSIX syslog probing.
 if (NOT WIN32 AND NOT CMAKE_SYSTEM_NAME MATCHES "MSYS")
     CHECK_INCLUDE_FILE (syslog.h HAVE_SYSLOG_H)
     if (HAVE_SYSLOG_H)
@@ -180,6 +183,7 @@ if (NOT WIN32 AND NOT CMAKE_SYSTEM_NAME MATCHES "MSYS")
         set(SOURCES_SYSLOG src/base/io/log/backends/SysLog.h src/base/io/log/backends/SysLog.cpp)
     endif()
 endif()
+# End MoneroOcean && C3Pool
 
 
 if (WITH_HTTP)

@@ -50,7 +50,9 @@ size_t inline generate<Algorithm::CN>(Threads<CpuThreads> &threads, uint32_t lim
     count += generate(Algorithm::kCN, threads, Algorithm::CN_1, limit);
     count += generate(Algorithm::kCN_2, threads, Algorithm::CN_2, limit);
 #   ifdef XMRIG_ALGO_CN_GPU
+    // MoneroOcean && C3Pool: generate CPU fallback threads for CN-GPU.
     count += generate(Algorithm::kCN_GPU, threads, Algorithm::CN_GPU, limit);
+    // End MoneroOcean && C3Pool
 #   endif
 
     if (!threads.isExist(Algorithm::CN_0)) {
@@ -126,35 +128,15 @@ size_t inline generate<Algorithm::RANDOM_X>(Threads<CpuThreads> &threads, uint32
         }
     }
 
-    if (!threads.isExist(Algorithm::RX_XEQ)) {
-        auto xeq = cpuInfo->threads(Algorithm::RX_XEQ, limit);
-        if (xeq == wow) {
-            threads.setAlias(Algorithm::RX_XEQ, Algorithm::kRX_WOW);
-            ++count;
-        }
-        else {
-            count += threads.move(Algorithm::kRX_XEQ, std::move(xeq));
-        }
-    }
-
-    if (!threads.isExist(Algorithm::RX_KEVA)) {
-        auto keva = cpuInfo->threads(Algorithm::RX_KEVA, limit);
-        if (keva == wow) {
-            threads.setAlias(Algorithm::RX_KEVA, Algorithm::kRX_WOW);
-            ++count;
-        }
-        else {
-            count += threads.move(Algorithm::kRX_KEVA, std::move(keva));
-        }
-    }
-
     if (!threads.isExist(Algorithm::RX_WOW)) {
         count += threads.move(Algorithm::kRX_WOW, std::move(wow));
     }
 
+    // MoneroOcean && C3Pool: Panthera/Scala uses its own generated CPU profile.
     if (!threads.isExist(Algorithm::RX_XLA)) {
         count += generate(Algorithm::kRX_XLA, threads, Algorithm::RX_XLA, limit);
     }
+    // End MoneroOcean && C3Pool
 
     count += generate(Algorithm::kRX, threads, Algorithm::RX_0, limit);
 
@@ -176,9 +158,12 @@ size_t inline generate<Algorithm::ARGON2>(Threads<CpuThreads> &threads, uint32_t
 template<>
 size_t inline generate<Algorithm::GHOSTRIDER>(Threads<CpuThreads>& threads, uint32_t limit)
 {
+    // MoneroOcean && C3Pool: Flex/KCN uses GhostRider family generation with its own profile.
     size_t count = 0;
     count += threads.move(Algorithm::kGHOSTRIDER, std::move(Cpu::info()->threads(Algorithm::GHOSTRIDER_RTM, limit)));
     count += threads.move(Algorithm::kFLEX, std::move(Cpu::info()->threads(Algorithm::FLEX_KCN, limit)));
+    // End MoneroOcean && C3Pool
+
     return count;
 }
 #endif

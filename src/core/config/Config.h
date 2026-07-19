@@ -28,7 +28,9 @@
 #include "base/kernel/config/BaseConfig.h"
 #include "base/tools/Object.h"
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
+// MoneroOcean && C3Pool: Config owns the per-algorithm benchmark cache.
 #include "core/MoBenchmark.h"
+// End MoneroOcean && C3Pool
 #endif
 
 
@@ -104,13 +106,17 @@ public:
     void getJSON(rapidjson::Document &doc) const override;
 
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: runtime access to algo-perf benchmark data.
     inline MoBenchmark &benchmark()           { return m_benchmark; }
+    // End MoneroOcean && C3Pool
 #   endif
 
 private:
     ConfigPrivate *d_ptr;
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: persisted algo-perf benchmark data.
     MoBenchmark m_benchmark;
+    // End MoneroOcean && C3Pool
 #   endif
 };
 

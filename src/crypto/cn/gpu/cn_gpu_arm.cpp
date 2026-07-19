@@ -32,21 +32,21 @@
 inline void vandq_f32(float32x4_t &v, uint32_t v2)
 {
     uint32x4_t vc = vdupq_n_u32(v2);
-    v = (float32x4_t)vandq_u32((uint32x4_t)v, vc);
+    v = vreinterpretq_f32_u32(vandq_u32(vreinterpretq_u32_f32(v), vc));
 }
 
 
 inline void vorq_f32(float32x4_t &v, uint32_t v2)
 {
     uint32x4_t vc = vdupq_n_u32(v2);
-    v = (float32x4_t)vorrq_u32((uint32x4_t)v, vc);
+    v = vreinterpretq_f32_u32(vorrq_u32(vreinterpretq_u32_f32(v), vc));
 }
 
 
 template <size_t v>
 inline void vrot_si32(int32x4_t &r)
 {
-    r = (int32x4_t)vextq_s8((int8x16_t)r, (int8x16_t)r, v);
+    r = vreinterpretq_s32_s8(vextq_s8(vreinterpretq_s8_s32(r), vreinterpretq_s8_s32(r), v));
 }
 
 template <>
@@ -68,6 +68,12 @@ inline void prep_dv(int32_t *idx, int32x4_t &v, float32x4_t &n)
     v = vld1q_s32(idx);
     n = vcvtq_f32_s32(v);
 }
+
+
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC push_options
+#   pragma GCC optimize ("no-associative-math")
+#endif
 
 
 inline void sub_round(const float32x4_t &n0, const float32x4_t &n1, const float32x4_t &n2, const float32x4_t &n3, const float32x4_t &rnd_c, float32x4_t &n, float32x4_t &d, float32x4_t &c)
@@ -238,3 +244,8 @@ void cn_gpu_inner_arm(const uint8_t *spad, uint8_t *lpad)
 }
 
 template void cn_gpu_inner_arm<xmrig::CnAlgo<xmrig::Algorithm::CN_GPU>().iterations(), xmrig::CnAlgo<xmrig::Algorithm::CN_GPU>().mask()>(const uint8_t* spad, uint8_t* lpad);
+
+
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC pop_options
+#endif

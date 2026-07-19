@@ -65,6 +65,7 @@ public:
         CN_PICO_0       = 0x63120200,   // "cn-pico"          CryptoNight-Pico
         CN_PICO_TLO     = 0x63120274,   // "cn-pico/tlo"      CryptoNight-Pico (TLO)
         CN_UPX2         = 0x63110200,   // "cn/upx2"          Uplexa (UPX2)
+        // MoneroOcean && C3Pool: fork runtime algorithms negotiated by MoneroOcean && C3Pool pools.
         CN_GPU          = 0x63150300,   // "cn/gpu"           CryptoNight-GPU (Ryo).
         CN_GR_0         = 0x63130100,   // "cn/dark"          GhostRider
         CN_GR_1         = 0x63130101,   // "cn/dark-lite"     GhostRider
@@ -78,10 +79,8 @@ public:
         RX_V2           = 0x72151202,   // "rx/2"             RandomX (Monero v2).
         RX_WOW          = 0x72141177,   // "rx/wow"           RandomWOW (Wownero).
         RX_ARQ          = 0x72121061,   // "rx/arq"           RandomARQ (Arqma).
-        RX_XEQ          = 0x72121000,
         RX_GRAFT        = 0x72151267,   // "rx/graft"         RandomGRAFT (Graft).
         RX_SFX          = 0x72151273,   // "rx/sfx"           RandomSFX (Safex Cash).
-        RX_KEVA         = 0x7214116b,   // "rx/keva"          RandomKEVA (Keva).
         RX_YADA         = 0x72151279,   // "rx/yada"          RandomYada (YadaCoin).
         AR2_CHUKWA      = 0x61130000,   // "argon2/chukwa"    Argon2id (Chukwa).
         AR2_CHUKWA_V2   = 0x61140000,   // "argon2/chukwav2"  Argon2id (Chukwa v2).
@@ -89,6 +88,7 @@ public:
         KAWPOW_RVN      = 0x6b0f0000,   // "kawpow/rvn"       KawPow (RVN)
 
         RX_XLA          = 0x721211ff,   // "panthera"         Panthera (Scala2).
+        // End MoneroOcean && C3Pool
     };
 
     enum Family : uint32_t {
@@ -153,10 +153,8 @@ public:
     static const char* kRX_V2;
     static const char *kRX_WOW;
     static const char *kRX_ARQ;
-    static const char *kRX_XEQ;
     static const char *kRX_GRAFT;
     static const char *kRX_SFX;
-    static const char *kRX_KEVA;
     static const char *kRX_YADA;
 #   endif
 
@@ -203,7 +201,7 @@ public:
     inline size_t l2() const                                { return l2(m_id); }
     inline uint32_t family() const                          { return family(m_id); }
     inline uint32_t minIntensity() const                    { return ((m_id == GHOSTRIDER_RTM) ? 8 : 1); };
-    inline uint32_t maxIntensity() const                    { return isCN() ? 5 : ((m_id == GHOSTRIDER_RTM) ? 8 : 1); };
+    inline uint32_t maxIntensity() const                    { return (m_id == CN_GPU) ? 1 : (isCN() ? 5 : ((m_id == GHOSTRIDER_RTM) ? 8 : 1)); };
 
     inline size_t l3() const                                { return l3(m_id); }
 

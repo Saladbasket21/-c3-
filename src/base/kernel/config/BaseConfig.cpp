@@ -48,6 +48,7 @@ namespace xmrig {
 
 
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
+// MoneroOcean && C3Pool: persisted controls for algo-perf benchmarking and switch throttling.
 const char *BaseConfig::kAlgoMinTime    = "algo-min-time";
 const char *BaseConfig::kAlgoPerf       = "algo-perf";
 #endif
@@ -66,6 +67,7 @@ const char *BaseConfig::kLogFile        = "log-file";
 const char *BaseConfig::kPrintTime      = "print-time";
 #ifdef XMRIG_FEATURE_MO_BENCHMARK
 const char *BaseConfig::kRebenchAlgo    = "rebench-algo";
+// End MoneroOcean && C3Pool
 #endif
 const char *BaseConfig::kSyslog         = "syslog";
 const char *BaseConfig::kTitle          = "title";
@@ -94,6 +96,7 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
     m_background        = reader.getBool(kBackground, m_background);
     m_dryRun            = reader.getBool(kDryRun, m_dryRun);
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
+    // MoneroOcean && C3Pool: read algo-perf benchmark controls from the base config layer.
     m_rebenchAlgo  = reader.getBool(kRebenchAlgo, m_rebenchAlgo);
 #   endif
     m_syslog            = reader.getBool(kSyslog, m_syslog);
@@ -111,6 +114,7 @@ bool xmrig::BaseConfig::read(const IJsonReader &reader, const char *fileName)
 #   ifdef XMRIG_FEATURE_MO_BENCHMARK
     m_benchAlgoTime = reader.getInt(kBenchAlgoTime, m_benchAlgoTime);
     m_algoMinTime   = reader.getInt(kAlgoMinTime, m_algoMinTime);
+    // End MoneroOcean && C3Pool
 #   endif
     setVerbose(reader.getValue(kVerbose));
 

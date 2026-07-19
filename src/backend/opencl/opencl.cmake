@@ -5,6 +5,56 @@ if (BUILD_STATIC AND XMRIG_OS_UNIX AND WITH_OPENCL)
 endif()
 
 if (WITH_OPENCL)
+    set(XMRIG_OPENCL_CL_DIR "${CMAKE_SOURCE_DIR}/src/backend/opencl/cl")
+    set(XMRIG_OPENCL_GENERATED_HEADERS
+        "${XMRIG_OPENCL_CL_DIR}/cn/cryptonight_cl.h"
+        "${XMRIG_OPENCL_CL_DIR}/cn/cryptonight_r_cl.h"
+        "${XMRIG_OPENCL_CL_DIR}/cn/cryptonight_gpu_cl.h"
+        "${XMRIG_OPENCL_CL_DIR}/rx/randomx_cl.h"
+        "${XMRIG_OPENCL_CL_DIR}/kawpow/kawpow_cl.h"
+        "${XMRIG_OPENCL_CL_DIR}/kawpow/kawpow_dag_cl.h"
+        )
+
+    find_program(NODEJS_EXECUTABLE NAMES node nodejs)
+    if (NODEJS_EXECUTABLE)
+        file(GLOB XMRIG_OPENCL_GENERATOR_INPUTS
+            "${CMAKE_SOURCE_DIR}/scripts/generate_cl.js"
+            "${CMAKE_SOURCE_DIR}/scripts/js/opencl.js"
+            "${CMAKE_SOURCE_DIR}/scripts/js/opencl_minify.js"
+            "${XMRIG_OPENCL_CL_DIR}/cn/*.cl"
+            "${XMRIG_OPENCL_CL_DIR}/rx/*.cl"
+            "${XMRIG_OPENCL_CL_DIR}/rx/*.h"
+            "${XMRIG_OPENCL_CL_DIR}/kawpow/*.cl"
+            "${XMRIG_OPENCL_CL_DIR}/kawpow/*.h"
+            )
+        list(REMOVE_ITEM XMRIG_OPENCL_GENERATOR_INPUTS ${XMRIG_OPENCL_GENERATED_HEADERS})
+
+        add_custom_command(
+            OUTPUT ${XMRIG_OPENCL_GENERATED_HEADERS}
+            COMMAND ${NODEJS_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/generate_cl.js"
+            DEPENDS ${XMRIG_OPENCL_GENERATOR_INPUTS}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Generating embedded OpenCL sources"
+            VERBATIM
+            )
+
+        add_custom_target(generate-opencl-sources DEPENDS ${XMRIG_OPENCL_GENERATED_HEADERS})
+    else()
+        set(XMRIG_OPENCL_MISSING_HEADERS)
+        foreach (HEADER IN LISTS XMRIG_OPENCL_GENERATED_HEADERS)
+            if (NOT EXISTS "${HEADER}")
+                list(APPEND XMRIG_OPENCL_MISSING_HEADERS "${HEADER}")
+            endif()
+        endforeach()
+
+        if (XMRIG_OPENCL_MISSING_HEADERS)
+            message(FATAL_ERROR "Node.js is required to regenerate embedded OpenCL sources when WITH_OPENCL=ON")
+        endif()
+
+        message(STATUS "Node.js not found; using checked-in embedded OpenCL sources")
+        add_custom_target(generate-opencl-sources)
+    endif()
+
     add_definitions(/DXMRIG_FEATURE_OPENCL /DCL_USE_DEPRECATED_OPENCL_1_2_APIS)
 
     set(HEADERS_BACKEND_OPENCL
@@ -72,11 +122,13 @@ if (WITH_OPENCL)
         add_definitions(/DCL_TARGET_OPENCL_VERSION=${WITH_OPENCL_VERSION})
     endif()
 
+    # MoneroOcean && C3Pool: MSYS builds use the Windows OpenCL cache implementation.
     if (WIN32 OR CMAKE_SYSTEM_NAME MATCHES "MSYS")
         list(APPEND SOURCES_BACKEND_OPENCL src/backend/opencl/OclCache_win.cpp)
     else()
         list(APPEND SOURCES_BACKEND_OPENCL src/backend/opencl/OclCache_unix.cpp)
     endif()
+    # End MoneroOcean && C3Pool
 
     if (WITH_RANDOMX)
         list(APPEND HEADERS_BACKEND_OPENCL
@@ -130,6 +182,7 @@ if (WITH_OPENCL)
              )
     endif()
 
+    # MoneroOcean && C3Pool: CN-GPU OpenCL support wires in Ryo generators, kernels, and runner.
     if (WITH_CN_GPU AND CMAKE_SIZEOF_VOID_P EQUAL 8)
         list(APPEND HEADERS_BACKEND_OPENCL
              src/backend/opencl/kernels/Cn00RyoKernel.h
@@ -146,6 +199,7 @@ if (WITH_OPENCL)
              src/backend/opencl/runners/OclRyoRunner.cpp
              )
     endif()
+    # End MoneroOcean && C3Pool
 
     if (WITH_STRICT_CACHE)
         add_definitions(/DXMRIG_STRICT_OPENCL_CACHE)

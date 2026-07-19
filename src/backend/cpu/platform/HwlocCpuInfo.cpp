@@ -260,7 +260,9 @@ xmrig::CpuThreads xmrig::HwlocCpuInfo::allThreads(const Algorithm &algorithm, ui
     CpuThreads threads;
     threads.reserve(m_threads);
 
+    // MoneroOcean && C3Pool: Flex/KCN is GhostRider family but remains single-hash intensity.
     const uint32_t intensity = (algorithm.id() == Algorithm::GHOSTRIDER_RTM) ? 8 : 0;
+    // End MoneroOcean && C3Pool
 
     for (const int32_t pu : m_units) {
         threads.add(pu, intensity);
@@ -360,9 +362,11 @@ void xmrig::HwlocCpuInfo::processTopLevelCache(hwloc_obj_t cache, const Algorith
     }
 
 #   ifdef XMRIG_ALGO_CN_GPU
+    // MoneroOcean && C3Pool: CN-GPU CPU fallback can use each PU independently.
     if (algorithm == Algorithm::CN_GPU) {
         cacheHashes = PUs;
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
 #   ifdef XMRIG_ALGO_RANDOMX
@@ -373,7 +377,9 @@ void xmrig::HwlocCpuInfo::processTopLevelCache(hwloc_obj_t cache, const Algorith
     if (extra == 0 && algorithm.l2() > 0) {
         cacheHashes = std::min<size_t>(std::max<size_t>(L2 / algorithm.l2(), cores.size()), cacheHashes);
     }
+    // MoneroOcean && C3Pool: Panthera/Scala profile is limited to physical core count.
     if (algorithm == Algorithm::RX_XLA) cacheHashes = cores.size();
+    // End MoneroOcean && C3Pool
 
 #   endif
 

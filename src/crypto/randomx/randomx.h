@@ -32,7 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
+// MoneroOcean && C3Pool: RandomX hash entry points need the active fork algorithm.
 #include "base/crypto/Algorithm.h"
+// End MoneroOcean && C3Pool
 #include "crypto/randomx/intrin_portable.h"
 
 #define RANDOMX_HASH_SIZE 32
@@ -76,9 +78,11 @@ struct RandomX_ConfigurationBase
 		ConditionMask_Calculated = ((1 << JumpBits) - 1) << JumpOffset,
 	};
 
+	// MoneroOcean && C3Pool: fork RandomX variants can override these consensus parameters.
         uint32_t ArgonMemory;
         uint32_t CacheAccesses;
         uint32_t DatasetBaseSize;
+	// End MoneroOcean && C3Pool
 
 	uint32_t ArgonIterations;
 	uint32_t ArgonLanes;
@@ -131,15 +135,19 @@ struct RandomX_ConfigurationBase
 	uint32_t Tweak_V2_PREFETCH : 1;
 	uint32_t Tweak_V2_COMMITMENT : 1;
 
-	uint8_t codeReadDatasetTweaked[64];
+	// MoneroOcean && C3Pool: x86 JIT dataset-read code is copied so Apply() can patch fork masks.
+	uint8_t codeReadDatasetTweaked[72];
 	uint32_t codeReadDatasetTweakedSize;
 	uint8_t codeReadDatasetV2Tweaked[72];
 	uint32_t codeReadDatasetV2TweakedSize;
+	// End MoneroOcean && C3Pool
 	uint8_t codeSshPrefetchTweaked[20];
 	uint8_t codePrefetchScratchpadTweaked[28];
 	uint32_t codePrefetchScratchpadTweakedSize;
 
+	// MoneroOcean && C3Pool: derived dataset alignment mask for fork dataset sizes.
         uint32_t CacheLineAlignMask_Calculated;
+	// End MoneroOcean && C3Pool
 
 	uint32_t AddressMask_Calculated[4];
 	uint32_t ScratchpadL3Mask_Calculated;
@@ -158,22 +166,22 @@ struct RandomX_ConfigurationMonero : public RandomX_ConfigurationBase {};
 struct RandomX_ConfigurationMoneroV2 : public RandomX_ConfigurationBase { RandomX_ConfigurationMoneroV2(); };
 struct RandomX_ConfigurationWownero : public RandomX_ConfigurationBase { RandomX_ConfigurationWownero(); };
 struct RandomX_ConfigurationArqma : public RandomX_ConfigurationBase { RandomX_ConfigurationArqma(); };
-struct RandomX_ConfigurationEquilibria : public RandomX_ConfigurationBase { RandomX_ConfigurationEquilibria(); };
+// MoneroOcean && C3Pool: fork RandomX-family configuration types.
 struct RandomX_ConfigurationGraft : public RandomX_ConfigurationBase { RandomX_ConfigurationGraft(); };
 struct RandomX_ConfigurationSafex : public RandomX_ConfigurationBase { RandomX_ConfigurationSafex(); };
-struct RandomX_ConfigurationKeva : public RandomX_ConfigurationBase { RandomX_ConfigurationKeva(); };
 struct RandomX_ConfigurationScala : public RandomX_ConfigurationBase { RandomX_ConfigurationScala(); };
+// End MoneroOcean && C3Pool
 struct RandomX_ConfigurationYada : public RandomX_ConfigurationBase { RandomX_ConfigurationYada(); };
 
 extern RandomX_ConfigurationMonero RandomX_MoneroConfig;
 extern RandomX_ConfigurationMoneroV2 RandomX_MoneroConfigV2;
 extern RandomX_ConfigurationWownero RandomX_WowneroConfig;
 extern RandomX_ConfigurationArqma RandomX_ArqmaConfig;
-extern RandomX_ConfigurationEquilibria RandomX_EquilibriaConfig;
+// MoneroOcean && C3Pool: fork RandomX-family global configurations.
 extern RandomX_ConfigurationGraft RandomX_GraftConfig;
 extern RandomX_ConfigurationSafex RandomX_SafexConfig;
-extern RandomX_ConfigurationKeva RandomX_KevaConfig;
 extern RandomX_ConfigurationScala RandomX_ScalaConfig;
+// End MoneroOcean && C3Pool
 extern RandomX_ConfigurationYada RandomX_YadaConfig;
 
 extern RandomX_ConfigurationBase RandomX_CurrentConfig;
@@ -333,10 +341,12 @@ RANDOMX_EXPORT void randomx_destroy_vm(randomx_vm *machine);
  * @param output is a pointer to memory where the hash will be stored. Must not
  *        be NULL and at least RANDOMX_HASH_SIZE bytes must be available for writing.
 */
+// MoneroOcean && C3Pool: hash APIs receive the algorithm for panthera and switch-sensitive variants.
 RANDOMX_EXPORT void randomx_calculate_hash(randomx_vm *machine, const void *input, size_t inputSize, void *output, const xmrig::Algorithm algo);
 
 RANDOMX_EXPORT void randomx_calculate_hash_first(randomx_vm* machine, uint64_t (&tempHash)[8], const void* input, size_t inputSize, const xmrig::Algorithm algo);
 RANDOMX_EXPORT void randomx_calculate_hash_next(randomx_vm* machine, uint64_t (&tempHash)[8], const void* nextInput, size_t nextInputSize, void* output, const xmrig::Algorithm algo);
+// End MoneroOcean && C3Pool
 
 /**
  * Calculate a RandomX commitment from a RandomX hash and its input.

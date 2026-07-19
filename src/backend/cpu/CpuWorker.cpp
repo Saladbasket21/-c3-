@@ -37,7 +37,9 @@
 #include "crypto/rx/RxDataset.h"
 #include "crypto/rx/RxVm.h"
 #include "crypto/ghostrider/ghostrider.h"
+// MoneroOcean && C3Pool: Flex/KCN is a single-hash CPU path layered beside GhostRider.
 #include "crypto/flex/flex.h"
+// End MoneroOcean && C3Pool
 #include "net/JobResults.h"
 
 
@@ -169,6 +171,7 @@ bool xmrig::CpuWorker<N>::selfTest()
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     if (m_algorithm.family() == Algorithm::GHOSTRIDER) {
+        // MoneroOcean && C3Pool: Flex/KCN has its own single-hash self-test vector.
         switch (m_algorithm.id()) {
             case Algorithm::GHOSTRIDER_RTM:
                 return (N == 8) && verify(Algorithm::GHOSTRIDER_RTM, test_output_gr);
@@ -176,10 +179,19 @@ bool xmrig::CpuWorker<N>::selfTest()
                 return (N == 1) && verify(Algorithm::FLEX_KCN, test_output_flex);
             default:;
         }
+        // End MoneroOcean && C3Pool
     }
 #   endif
 
     if (m_algorithm.family() == Algorithm::CN) {
+#       ifdef XMRIG_ALGO_CN_GPU
+        // MoneroOcean && C3Pool: CN-GPU has only a single-hash CPU implementation.
+        if (m_algorithm == Algorithm::CN_GPU) {
+            return (N == 1) && verify(Algorithm::CN_GPU, test_output_gpu);
+        }
+        // End MoneroOcean && C3Pool
+#       endif
+
         const bool rc = verify(Algorithm::CN_0,      test_output_v0)   &&
                         verify(Algorithm::CN_1,      test_output_v1)   &&
                         verify(Algorithm::CN_2,      test_output_v2)   &&
@@ -192,17 +204,8 @@ bool xmrig::CpuWorker<N>::selfTest()
                         verify(Algorithm::CN_ZLS,    test_output_zls)  &&
                         verify(Algorithm::CN_CCX,    test_output_ccx)  &&
                         verify(Algorithm::CN_DOUBLE, test_output_double)
-#                       ifdef XMRIG_ALGO_CN_GPU
-                        &&
-                        verify(Algorithm::CN_GPU,    test_output_gpu)
-#                       endif
                         ;
 
-#       ifdef XMRIG_ALGO_CN_GPU
-        if (! (!rc || N > 1)) {
-            return verify(Algorithm::CN_GPU, test_output_gpu);
-        } else
-#       endif
         return rc;
     }
 
@@ -317,6 +320,7 @@ void xmrig::CpuWorker<N>::start()
                     if (job.hasMinerSignature()) {
                         job.generateMinerSignature(m_job.blob(), job.size(), miner_signature_ptr);
                     }
+                    // MoneroOcean && C3Pool: pass the job algorithm through RandomX first/next calls for fork variants.
                     randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size(), job.algorithm());
 
                     if (RandomX_CurrentConfig.Tweak_V2_COMMITMENT) {
@@ -335,6 +339,7 @@ void xmrig::CpuWorker<N>::start()
                 }
 
                 randomx_calculate_hash_next(m_vm, tempHash, m_job.blob(), job.size(), m_hash, job.algorithm());
+                // End MoneroOcean && C3Pool
 
                 if (RandomX_CurrentConfig.Tweak_V2_COMMITMENT) {
                     memcpy(m_commitment, m_hash, RANDOMX_HASH_SIZE);
@@ -350,6 +355,7 @@ void xmrig::CpuWorker<N>::start()
 
 #               ifdef XMRIG_ALGO_GHOSTRIDER
                 case Algorithm::GHOSTRIDER:
+                    // MoneroOcean && C3Pool: Flex/KCN reuses the GhostRider family slot with single-hash dispatch.
                     switch (job.algorithm()) {
                         case Algorithm::GHOSTRIDER_RTM:
                             if (N == 8) {
@@ -368,6 +374,7 @@ void xmrig::CpuWorker<N>::start()
                         default:
                             valid = false;
                     }
+                    // End MoneroOcean && C3Pool
                     break;
 #               endif
 
@@ -447,6 +454,7 @@ template<size_t N>
 bool xmrig::CpuWorker<N>::verify(const Algorithm &algorithm, const uint8_t *referenceValue)
 {
 #   ifdef XMRIG_ALGO_GHOSTRIDER
+    // MoneroOcean && C3Pool: Flex/KCN uses its own deterministic test header and finalizer.
     switch (algorithm) {
       case Algorithm::GHOSTRIDER_RTM: {
         uint8_t blob[N * 80] = {};
@@ -489,6 +497,7 @@ bool xmrig::CpuWorker<N>::verify(const Algorithm &algorithm, const uint8_t *refe
       }
       default:;
     }
+    // End MoneroOcean && C3Pool
 #   endif
 
     cn_hash_fun func = fn(algorithm);
@@ -610,4 +619,3 @@ template class CpuWorker<5>;
 template class CpuWorker<8>;
 
 } // namespace xmrig
-

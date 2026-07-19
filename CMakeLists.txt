@@ -6,6 +6,7 @@ option(WITH_CN_LITE         "Enable CryptoNight-Lite algorithms family" ON)
 option(WITH_CN_HEAVY        "Enable CryptoNight-Heavy algorithms family" ON)
 option(WITH_CN_PICO         "Enable CryptoNight-Pico algorithm" ON)
 option(WITH_CN_FEMTO        "Enable CryptoNight-UPX2 algorithm" ON)
+# MoneroOcean && C3Pool: keep fork-only runtime algorithms and algo-perf benchmarking build switches.
 option(WITH_CN_GPU          "Enable CryptoNight-GPU algorithm" ON)
 option(WITH_RANDOMX         "Enable RandomX algorithms family" ON)
 option(WITH_ARGON2          "Enable Argon2 algorithms family" ON)
@@ -26,7 +27,8 @@ option(WITH_NVML            "Enable NVML (NVIDIA Management Library) support (on
 option(WITH_ADL             "Enable ADL (AMD Display Library) or sysfs support (only if OpenCL backend enabled)" ON)
 option(WITH_STRICT_CACHE    "Enable strict checks for OpenCL cache" ON)
 option(WITH_INTERLEAVE_DEBUG_LOG "Enable debug log for threads interleave" OFF)
-option(WITH_MO_BENCHMARK    "Enable Benchmark module and algo-perf feature (for MoneroOcean)" ON)
+option(WITH_MO_BENCHMARK    "Enable Benchmark module and algo-perf feature (for MoneroOcean && C3Pool)" ON)
+# End MoneroOcean && C3Pool
 option(WITH_PROFILING       "Enable profiling for developers" OFF)
 option(WITH_SSE4_1          "Enable SSE 4.1 for Blake2" ON)
 option(WITH_AVX2            "Enable AVX2 for Blake2" ON)
@@ -131,16 +133,20 @@ set(SOURCES_CRYPTO
     src/crypto/common/MemoryPool.cpp
     src/crypto/common/Nonce.cpp
     src/crypto/common/VirtualMemory.cpp
+    # MoneroOcean && C3Pool: Flex/KCN uses fork-only finalizer helpers.
     src/crypto/flex/flex.cpp
     src/crypto/flex/flex_keccak.c
+    # End MoneroOcean && C3Pool
    )
 
+# MoneroOcean && C3Pool: algo-perf reporting is built only when the fork benchmark feature is enabled.
 if (WITH_MO_BENCHMARK)
     list(APPEND SOURCES
         src/core/MoBenchmark.cpp
         )
     add_definitions(/DXMRIG_FEATURE_MO_BENCHMARK)
 endif()
+# End MoneroOcean && C3Pool
 
 if (CMAKE_C_COMPILER_ID MATCHES GNU)
     set_source_files_properties(src/crypto/cn/CnHash.cpp PROPERTIES COMPILE_FLAGS "-Ofast -fno-tree-vectorize")
@@ -173,7 +179,9 @@ if (XMRIG_OS_WIN)
         src/crypto/common/VirtualMemory_win.cpp
         )
 
+    # MoneroOcean && C3Pool: COM libraries are required by fork runtime integration on Windows.
     set(EXTRA_LIBS ws2_32 psapi iphlpapi userenv dbghelp ole32 oleaut32)
+    # End MoneroOcean && C3Pool
 elseif (XMRIG_OS_APPLE)
     list(APPEND SOURCES_OS
         src/App_unix.cpp
@@ -209,7 +217,9 @@ add_definitions(-D__STDC_FORMAT_MACROS -DUNICODE -D_FILE_OFFSET_BITS=64)
 find_package(UV REQUIRED)
 
 include(cmake/flags.cmake)
+# MoneroOcean && C3Pool: CN-GPU adds fork-specific CPU and OpenCL build wiring.
 include(cmake/cn-gpu.cmake)
+# End MoneroOcean && C3Pool
 include(cmake/randomx.cmake)
 include(cmake/argon2.cmake)
 include(cmake/kawpow.cmake)
@@ -249,7 +259,29 @@ if (WITH_DEBUG_LOG)
 endif()
 
 add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${TLS_SOURCES} ${XMRIG_ASM_SOURCES})
+if (WITH_OPENCL)
+    add_dependencies(${CMAKE_PROJECT_NAME} generate-opencl-sources)
+endif()
 target_link_libraries(${CMAKE_PROJECT_NAME} ${XMRIG_ASM_LIBRARY} ${OPENSSL_LIBRARIES} ${UV_LIBRARIES} ${EXTRA_LIBS} ${CPUID_LIB} ${ARGON2_LIBRARY} ${ETHASH_LIBRARY} ${GHOSTRIDER_LIBRARY})
+
+add_custom_target(check-hashes
+    COMMAND node ${CMAKE_SOURCE_DIR}/run_tests.js --safe --build-dir ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    USES_TERMINAL
+)
+
+add_custom_target(check-hashes-full
+    COMMAND node ${CMAKE_SOURCE_DIR}/run_tests.js --suite hash-full --build-dir ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    USES_TERMINAL
+)
+
+add_custom_target(check-miner-integration
+    COMMAND node ${CMAKE_SOURCE_DIR}/run_tests.js --suite miner-integration --build-dir ${CMAKE_BINARY_DIR} --skip-build
+    DEPENDS ${CMAKE_PROJECT_NAME}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    USES_TERMINAL
+)
 
 if (WIN32)
     if (NOT ARM_TARGET)

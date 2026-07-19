@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+// MoneroOcean && C3Pool: hard_coded_eb is internal to sph_keccak.c in this fork.
+// End MoneroOcean && C3Pool
 #include "sph_types.h"
 #include <stddef.h>
 
